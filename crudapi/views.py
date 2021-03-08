@@ -1,22 +1,39 @@
+import logging
 
-from django.http.response import JsonResponse
+from django.core.exceptions import ObjectDoesNotExist, EmptyResultSet
+from django.http.response import JsonResponse, HttpResponse
+from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from crudapi.models import Employee
 from crudapi.serializers import EmployeeSerializer
 
+logger = logging.getLogger(__name__)
+
+def setcookie(request):
+    response = HttpResponse("Cookie Set")
+    response.set_cookie('firstname', 'praveen')
+    return response
+def getcookie(request):
+    value  = request.COOKIES['firstname']
+    return HttpResponse("firstname is : "+ value)
+
 
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
 def employee_list(request):
     if request.method == 'GET':
+        logger.debug("inside get method")
         employee = Employee.objects.all()
         firstname = request.GET.get('firstname',None)
         if firstname is not None:
+            logger.debug("firstname is {}".format(firstname))
             employee = employee.filter(firstname=firstname)
         employee_serializer = EmployeeSerializer(employee, many=True)
         return JsonResponse(employee_serializer.data, safe=False)
 
+
     elif request.method == 'POST':
+        logger.debug("inside post method")
         employee_data = JSONParser().parse(request)
         employee_serializer = EmployeeSerializer(data=employee_data)
         if employee_serializer.is_valid():
@@ -26,6 +43,7 @@ def employee_list(request):
             return JsonResponse({ "message":"not valid"})
 
     elif request.method == 'DELETE':
+        logger.debug("inside delete method")
         firstname = request.GET.get('firstname', None)
         employee = Employee.objects.filter(firstname=firstname)
         if firstname is not None:
@@ -35,6 +53,7 @@ def employee_list(request):
             return JsonResponse({"message":"deletion not successful"})
 
     elif request.method == 'PUT':
+        logger.debug("inside put method")
         employee_data = JSONParser().parse(request)
         firstname = employee_data.get("firstname")
         if firstname is not None:
@@ -43,3 +62,8 @@ def employee_list(request):
             return JsonResponse({"message":"updated successful"})
         else:
             return JsonResponse({"message":"update failed"})
+
+#    try:
+#        employee = TEmployee.objects.get(id=10)
+#    except TEmployee.DoesNotExist:
+#        return HttpResponse("EXCEPTION")

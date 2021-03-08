@@ -20,3 +20,4 @@ urlpatterns = [
     url(r'^', include('crudapi.urls')),
     url(r'^admin/', admin.site.urls),
 ]
+
